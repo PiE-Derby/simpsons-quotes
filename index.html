@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simpsons Quote Machine</title>
+  <meta name="description" content="Random Simpsons quotes. Powered by a free API and questionable taste.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📺</text></svg>">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #ffd90f;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 8vw, 4rem);
+      color: #1a1a1a;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      text-shadow: 4px 4px 0 #ff6d00;
+    }
+
+    header p {
+      color: #333;
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+
+    .card {
+      background: white;
+      border: 4px solid #1a1a1a;
+      border-radius: 16px;
+      max-width: 560px;
+      width: 100%;
+      padding: 32px;
+      box-shadow: 8px 8px 0 #1a1a1a;
+      text-align: center;
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .character-img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: #ffd90f;
+      border: 3px solid #1a1a1a;
+      padding: 8px;
+    }
+
+    .character-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #ff6d00;
+      background: #fff3cd;
+      border: 2px solid #ff6d00;
+      padding: 3px 12px;
+      border-radius: 20px;
+    }
+
+    .quote-text {
+      font-size: clamp(1.05rem, 3vw, 1.25rem);
+      line-height: 1.5;
+      color: #1a1a1a;
+      font-style: italic;
+      quotes: "\201C" "\201D";
+    }
+    .quote-text::before { content: open-quote; font-size: 1.4em; color: #ffd90f; line-height: 0; vertical-align: -0.3em; }
+    .quote-text::after  { content: close-quote; font-size: 1.4em; color: #ffd90f; line-height: 0; vertical-align: -0.3em; }
+
+    .loading {
+      color: #888;
+      font-style: italic;
+      font-size: 1rem;
+    }
+
+    button {
+      margin-top: 10px;
+      background: #ffd90f;
+      color: #1a1a1a;
+      border: 3px solid #1a1a1a;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-family: inherit;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 #1a1a1a;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    button:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 #1a1a1a; }
+    button:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #1a1a1a; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    footer {
+      margin-top: 24px;
+      font-size: 0.75rem;
+      color: #555;
+      text-align: center;
+    }
+    footer a { color: #333; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📺 Simpsons</h1>
+  <p>Random wisdom from Springfield</p>
+</header>
+
+<div class="card" id="card">
+  <p class="loading">Loading wisdom...</p>
+</div>
+
+<button id="btn" onclick="fetchQuote()">New Quote</button>
+
+<footer>
+  Quotes from <a href="https://thesimpsonsquoteapi.glitch.me" target="_blank">thesimpsonsquoteapi.glitch.me</a> ·
+  <a href="https://github.com/PiE-Derby/simpsons-quotes" target="_blank">source</a>
+</footer>
+
+<script>
+  async function fetchQuote() {
+    const card = document.getElementById('card');
+    const btn = document.getElementById('btn');
+    btn.disabled = true;
+    card.innerHTML = '<p class="loading">Summoning Springfield...</p>';
+
+    try {
+      const res = await fetch('https://thesimpsonsquoteapi.glitch.me/quotes');
+      const [data] = await res.json();
+
+      card.innerHTML = `
+        ${data.image ? `<img class="character-img" src="${data.image}" alt="${data.character}" onerror="this.style.display='none'">` : ''}
+        <span class="character-name">${data.character}</span>
+        <p class="quote-text">${data.quote}</p>
+      `;
+    } catch (e) {
+      card.innerHTML = '<p class="loading">D\'oh! API failed. Try again.</p>';
+    }
+
+    btn.disabled = false;
+  }
+
+  fetchQuote();
+</script>
+
+</body>
+</html>
