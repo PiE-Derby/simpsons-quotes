@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simpsons Quote Machine</title>
-  <meta name="description" content="Random Simpsons quotes. Powered by a free API and questionable taste.">
+  <meta name="description" content="Random Simpsons quotes. Powered by questionable taste.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📺</text></svg>">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,22 +49,17 @@
       padding: 32px;
       box-shadow: 8px 8px 0 #1a1a1a;
       text-align: center;
-      min-height: 260px;
+      min-height: 200px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 20px;
+      gap: 16px;
     }
 
-    .character-img {
-      width: 120px;
-      height: 120px;
-      object-fit: contain;
-      border-radius: 50%;
-      background: #ffd90f;
-      border: 3px solid #1a1a1a;
-      padding: 8px;
+    .character-emoji {
+      font-size: 3.5rem;
+      line-height: 1;
     }
 
     .character-name {
@@ -89,10 +84,10 @@
     .quote-text::before { content: open-quote; font-size: 1.4em; color: #ffd90f; line-height: 0; vertical-align: -0.3em; }
     .quote-text::after  { content: close-quote; font-size: 1.4em; color: #ffd90f; line-height: 0; vertical-align: -0.3em; }
 
-    .loading {
+    .episode {
+      font-size: 0.75rem;
       color: #888;
-      font-style: italic;
-      font-size: 1rem;
+      font-style: normal;
     }
 
     button {
@@ -113,7 +108,6 @@
     }
     button:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 #1a1a1a; }
     button:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #1a1a1a; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     footer {
       margin-top: 24px;
@@ -131,41 +125,70 @@
   <p>Random wisdom from Springfield</p>
 </header>
 
-<div class="card" id="card">
-  <p class="loading">Loading wisdom...</p>
-</div>
+<div class="card" id="card"></div>
 
-<button id="btn" onclick="fetchQuote()">New Quote</button>
+<button onclick="showQuote()">New Quote</button>
 
 <footer>
-  Quotes from <a href="https://thesimpsonsquoteapi.glitch.me" target="_blank">thesimpsonsquoteapi.glitch.me</a> ·
+  A curated collection ·
   <a href="https://github.com/PiE-Derby/simpsons-quotes" target="_blank">source</a>
 </footer>
 
 <script>
-  async function fetchQuote() {
-    const card = document.getElementById('card');
-    const btn = document.getElementById('btn');
-    btn.disabled = true;
-    card.innerHTML = '<p class="loading">Summoning Springfield...</p>';
+  const QUOTES = [
+    { character: "Homer Simpson", emoji: "🍩", quote: "Trying is the first step towards failure.", episode: "Homer's Phobia (S8E15)" },
+    { character: "Homer Simpson", emoji: "🍩", quote: "D'oh!", episode: "Various" },
+    { character: "Homer Simpson", emoji: "🍩", quote: "To alcohol! The cause of, and solution to, all of life's problems.", episode: "Homer vs. Patty and Selma (S6E17)" },
+    { character: "Homer Simpson", emoji: "🍩", quote: "I am so smart! S-M-R-T... I mean S-M-A-R-T.", episode: "Homer Goes to College (S5E3)" },
+    { character: "Homer Simpson", emoji: "🍩", quote: "It takes two to lie. One to lie and one to listen.", episode: "Colonel Homer (S3E20)" },
+    { character: "Homer Simpson", emoji: "🍩", quote: "How is education supposed to make me feel smarter? Besides, every time I learn something new, it pushes some old stuff out of my brain.", episode: "Homie the Clown (S6E15)" },
+    { character: "Homer Simpson", emoji: "🍩", quote: "Facts are meaningless. You could use facts to prove anything that's even remotely true.", episode: "Homer's Enemy (S8E23)" },
+    { character: "Homer Simpson", emoji: "🍩", quote: "Lisa, if the Bible has taught us nothing else — and it hasn't — it's that girls should stick to girls' sports, such as having stitches.", episode: "Bart Star (S9E6)" },
+    { character: "Bart Simpson", emoji: "🛹", quote: "I didn't do it.", episode: "Various" },
+    { character: "Bart Simpson", emoji: "🛹", quote: "Eat my shorts!", episode: "Various" },
+    { character: "Bart Simpson", emoji: "🛹", quote: "I'm Bart Simpson. Who the hell are you?", episode: "Bart the Genius (S1E2)" },
+    { character: "Bart Simpson", emoji: "🛹", quote: "I am so great. I am so great. Everybody loves me, I am so great.", episode: "Various" },
+    { character: "Lisa Simpson", emoji: "🎷", quote: "A rose by any other name would smell as sweet, but would it really? What if you called it a stench blossom?", episode: "Bart vs. Lisa vs. the Third Grade (S14E3)" },
+    { character: "Lisa Simpson", emoji: "🎷", quote: "I'm a level-five vegan — I won't eat anything that casts a shadow.", episode: "Lisa the Tree Hugger (S12E4)" },
+    { character: "Lisa Simpson", emoji: "🎷", quote: "Dad, as intelligence goes up, happiness often goes down. With me, I saw the top of that bell curve and it was pretty lonely up there.", episode: "HOMR (S12E9)" },
+    { character: "Marge Simpson", emoji: "👩‍🦱", quote: "I just think it's a little weird to be taking advice from a bee.", episode: "Marge in Chains (S4E21)" },
+    { character: "Marge Simpson", emoji: "👩‍🦱", quote: "Homer, there's someone here who can help you.", episode: "Various" },
+    { character: "Montgomery Burns", emoji: "💰", quote: "Excellent.", episode: "Various" },
+    { character: "Montgomery Burns", emoji: "💰", quote: "Release the hounds.", episode: "Various" },
+    { character: "Montgomery Burns", emoji: "💰", quote: "I'll keep it short and sweet — Family. Religion. Friendship. These are the three demons you must slay if you wish to succeed in business.", episode: "Marge Gets a Job (S4E7)" },
+    { character: "Ned Flanders", emoji: "🙏", quote: "Hi-diddly-ho, neighborino!", episode: "Various" },
+    { character: "Ned Flanders", emoji: "🙏", quote: "Okely-dokely!", episode: "Various" },
+    { character: "Ralph Wiggum", emoji: "🌟", quote: "I'm in danger.", episode: "This Little Wiggy (S9E18)" },
+    { character: "Ralph Wiggum", emoji: "🌟", quote: "My cat's breath smells like cat food.", episode: "Marge in Chains (S4E21)" },
+    { character: "Ralph Wiggum", emoji: "🌟", quote: "I eateded the purple berries. They taste like burning.", episode: "Various" },
+    { character: "Comic Book Guy", emoji: "📚", quote: "Worst. Episode. Ever.", episode: "Various" },
+    { character: "Krusty the Clown", emoji: "🤡", quote: "What? No, I didn't see the sign. I'm illiterate.", episode: "Various" },
+    { character: "Chief Wiggum", emoji: "🚔", quote: "Stop, in the name of American squeamishness!", episode: "Various" },
+    { character: "Groundskeeper Willie", emoji: "⛏", quote: "Grease me up, woman!", episode: "Various" },
+    { character: "Sideshow Bob", emoji: "🎭", quote: "I'll be back. You can't keep the Democrats out of the White House forever — and when they get in, I'm back, baby!", episode: "Sideshow Bob Roberts (S6E5)" },
+    { character: "Apu Nahasapeemapetilon", emoji: "🏪", quote: "Thank you, come again.", episode: "Various" },
+    { character: "Milhouse Van Houten", emoji: "🕶", quote: "Everything's coming up Milhouse!", episode: "Various" },
+    { character: "Otto Mann", emoji: "🎸", quote: "I call the big one Bitey.", episode: "Bart's Dog Gets an F (S2E16)" },
+    { character: "Homer Simpson", emoji: "🍩", quote: "Oh, they have the internet on computers now!", episode: "Das Bus (S9E14)" },
+    { character: "Homer Simpson", emoji: "🍩", quote: "Marge, it takes two to lie. One to lie and one to listen.", episode: "Colonel Homer (S3E20)" },
+  ];
 
-    try {
-      const res = await fetch('https://thesimpsonsquoteapi.glitch.me/quotes');
-      const [data] = await res.json();
+  let lastIndex = -1;
 
-      card.innerHTML = `
-        ${data.image ? `<img class="character-img" src="${data.image}" alt="${data.character}" onerror="this.style.display='none'">` : ''}
-        <span class="character-name">${data.character}</span>
-        <p class="quote-text">${data.quote}</p>
-      `;
-    } catch (e) {
-      card.innerHTML = '<p class="loading">D\'oh! API failed. Try again.</p>';
-    }
-
-    btn.disabled = false;
+  function showQuote() {
+    let idx;
+    do { idx = Math.floor(Math.random() * QUOTES.length); } while (idx === lastIndex && QUOTES.length > 1);
+    lastIndex = idx;
+    const q = QUOTES[idx];
+    document.getElementById('card').innerHTML = `
+      <div class="character-emoji">${q.emoji}</div>
+      <span class="character-name">${q.character}</span>
+      <p class="quote-text">${q.quote}</p>
+      <p class="episode">${q.episode}</p>
+    `;
   }
 
-  fetchQuote();
+  showQuote();
 </script>
 
 </body>
